@@ -2,9 +2,11 @@ import { Client } from "discord.js";
 import { deployCommands } from "./deploy-commands";
 import { commands } from "./commands/index";
 import { discordConfig, telegramConfig, discordEnabled, telegramEnabled } from "./config";
-import { initBot } from "./bootstrap/init-bot";
+import { initBot, initTelegramBot } from "./bootstrap/init-bot";
 import { logger } from "./utils/logger";
 import { Bot } from "grammy";
+console.debug("Telegram Bot enabled: " + telegramEnabled);
+console.debug("Discord Bot enabled: " + discordEnabled);
 
 export const discordClient = discordEnabled ? new Client({
     intents: ["Guilds", "GuildMessages", "DirectMessages"],
@@ -41,6 +43,7 @@ if (discordClient) {
 export const telegramBot = telegramEnabled ? new Bot(String(telegramConfig.TELEGRAM_BOT_TOKEN)) : null;
 
 if (telegramBot) {
+    await initTelegramBot(telegramBot);
     telegramBot.start();
-    logger.info("Telegram bot is ready! 🤖");
+    console.info("Telegram bot is ready! 🤖");
 }

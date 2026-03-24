@@ -7,7 +7,8 @@ const {
     DISCORD_APPLICATION_ID,
     DISCORD_PUBLIC_KEY,
     TELEGRAM_BOT_TOKEN,
-    TELEGRAM_CHAT_ID,
+    TELEGRAM_ADMIN_USER_ID,
+    TELEGRAM_COMMAND_PREFIX,
     GITHUB_API_TOKEN
 } = process.env;
 
@@ -17,7 +18,7 @@ if (DISCORD_TOKEN && DISCORD_APPLICATION_ID && DISCORD_PUBLIC_KEY) {
 }
 
 export var telegramEnabled = false;
-if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
+if (TELEGRAM_BOT_TOKEN && TELEGRAM_ADMIN_USER_ID && TELEGRAM_COMMAND_PREFIX) {
     telegramEnabled = true;
 }
 
@@ -33,7 +34,8 @@ export const discordConfig = {
 
 export const telegramConfig = {
     TELEGRAM_BOT_TOKEN,
-    TELEGRAM_CHAT_ID,
+    TELEGRAM_ADMIN_USER_ID,
+    TELEGRAM_COMMAND_PREFIX,
 };
 
 export const githubConfig = {
