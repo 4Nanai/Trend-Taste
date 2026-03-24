@@ -1,23 +1,27 @@
 import { prisma } from "@db";
-import type { Task, TaskType, LanguageType } from "@generated/client";
+import { Platform, type Task, type TaskType, type LanguageType } from "@generated/client";
 
-export async function getTaskByChannelId(channelId: string): Promise<Task | null> {
+export async function getTaskByChannelId(channelId: string, platform: Platform = Platform.DISCORD): Promise<Task | null> {
     return prisma.task.findUnique({
         where: {
-            channelId: channelId
+            platform_channelId: {
+                platform,
+                channelId,
+            },
         }
     });
 }
 
-export async function getTasksByEnabledStatus(enabledStatus: boolean): Promise<Task[]> {
+export async function getTasksByEnabledStatusByPlatform(enabledStatus: boolean, platform: Platform): Promise<Task[]> {
     return prisma.task.findMany({
         where: {
-            enabled: enabledStatus
+            enabled: enabledStatus,
+            platform: platform,
         }
     });
 }
 
-export async function getTasksToInitialize(): Promise<Task[]> {
+export async function getTasksToInitializeByPlatform(platform: Platform): Promise<Task[]> {
     const tasks = await prisma.task.findMany({
         where: {
             enabled: true,
@@ -35,30 +39,39 @@ export async function getTasksToInitialize(): Promise<Task[]> {
     return tasks;
 }
 
-export async function upsertTaskEnabledStatus(channelId: string, enabled: boolean): Promise<Task> {
-    return _upsertTask(channelId, { enabled });
+export async function upsertTaskEnabledStatus(channelId: string, enabled: boolean, platform: Platform): Promise<Task> {
+    return _upsertTask(channelId, { enabled }, platform);
 }
 
-export async function upsertTaskSchedule(channelId: string, schedule: Date): Promise<Task> {
-    return _upsertTask(channelId, { schedule });
+export async function upsertTaskSchedule(channelId: string, schedule: Date, platform: Platform): Promise<Task> {
+    return _upsertTask(channelId, { schedule }, platform);
 }
 
-export async function upsertTaskType(channelId: string, taskType: TaskType): Promise<Task> {
-    return _upsertTask(channelId, { taskType });
+export async function upsertTaskType(channelId: string, taskType: TaskType, platform: Platform): Promise<Task> {
+    return _upsertTask(channelId, { taskType }, platform);
 }
 
-export async function upsertTaskLanguage(channelId: string, language: LanguageType): Promise<Task> {
-    return _upsertTask(channelId, { language });
+export async function upsertTaskLanguage(channelId: string, language: LanguageType, platform: Platform): Promise<Task> {
+    return _upsertTask(channelId, { language }, platform);
 }
 
-export async function upsertTaskTimezone(channelId: string, timezone: string): Promise<Task> {
-    return _upsertTask(channelId, { timezone });
+export async function upsertTaskTimezone(channelId: string, timezone: string, platform: Platform): Promise<Task> {
+    return _upsertTask(channelId, { timezone }, platform);
 }
 
-async function _upsertTask(channelId: string, data: Partial<Omit<Task, "id" | "createdAt" | "updatedAt" | "channelId">>): Promise<Task> {
+async function _upsertTask(
+    channelId: string,
+    data: Partial<Omit<Task, "id" | "createdAt" | "updatedAt" | "channelId" | "platform">>,
+    platform: Platform,
+): Promise<Task> {
   return prisma.task.upsert({
-    where: { channelId },
+    where: {
+      platform_channelId: {
+        platform,
+        channelId,
+      },
+    },
     update: data,
-    create: { channelId, ...data },
+    create: { channelId, platform, ...data },
   });
 }

@@ -1,6 +1,6 @@
 import { getTaskById } from "@services/task.service";
 import { runGithubTrendingTask } from "../tasks/github-trending";
-import { client } from "../bot";
+import { discordClient } from "../bot";
 import { logger } from "@utils/logger";
 
 /**
@@ -9,6 +9,10 @@ import { logger } from "@utils/logger";
  * @returns void
  */
 export async function runTask(taskId: number): Promise<boolean> {
+    if (!discordClient) {
+        logger.error("Discord client is not initialized");
+        return false;
+    }
     const runnerLogger = logger.child({taskId});
     const task = await getTaskById(taskId);
     if (!task) {
@@ -17,7 +21,7 @@ export async function runTask(taskId: number): Promise<boolean> {
     }
     switch (task.taskType) {
         case 'GITHUB_TRENDING': {
-            await runGithubTrendingTask(client, task.channelId, task.language);
+            await runGithubTrendingTask(discordClient, task.channelId, task.language);
             runnerLogger.info("Github trending task completed");
             break;
         }

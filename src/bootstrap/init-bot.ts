@@ -3,6 +3,7 @@ import { getTasksToInit } from "../services/task.service";
 import { Client } from "discord.js";
 import { deployCommands } from "../deploy-commands";
 import { logger } from "../utils/logger";
+import type { Bot } from "grammy";
 
 /**
  * Initialize the bot:
@@ -15,6 +16,18 @@ export async function initBot(client: Client) {
         initTasks(),
         deployCommandsToAllGuilds(client),
     ]);
+}
+
+/**
+ * Initialize the Telegram bot:
+ * - Initialize tasks
+ * @param bot 
+ */
+export async function initTelegramBot(bot: Bot) {
+    const enabledTasks = await getTasksToInit();
+    enabledTasks.forEach(task => {
+        logger.info("");
+    })
 }
 
 /**
