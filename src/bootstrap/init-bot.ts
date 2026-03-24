@@ -1,12 +1,11 @@
 import { addTask } from "../scheduled/scheduler";
 import { getTasksToInit } from "../services/task.service";
 import { Client } from "discord.js";
-import { deployCommands, onTelegramBindCommand, onTelegramHelloCommand, onTelegramHelpCommand, onTelegramUnbindCommand } from "../deploy-commands";
+import { deployCommands, deployTelegramBotCommands } from "../deploy-commands";
 import { logger } from "../utils/logger";
 import type { Bot } from "grammy";
 import { Platform } from "@generated/enums";
 import { telegramConfig } from "@/config";
-import { describe } from "node:test";
 
 /**
  * Initialize the bot:
@@ -30,7 +29,7 @@ export async function initTelegramBot(bot: Bot) {
     await Promise.all([
         initTelegramTasks(),
         registerTelegramAdmin(bot),
-        deployTelegramBotCommands(bot)
+        deployTelegramBotCommands(bot),
     ]);
 }
 
@@ -66,38 +65,6 @@ async function deployCommandsToAllGuilds(client: Client) {
         logger.debug({guildName: guild.name, guildId: guild.id}, "Deploying commands to guild");
         await deployCommands({ guildId: guild.id });
     }));
-}
-
-async function deployTelegramBotCommands(bot: Bot) {
-    const commands = [
-        {
-            command: "help",
-            description: "List available commands",
-        },
-        {
-            command: "hello",
-            description: "Say hello to the bot",
-        },
-        {
-            command: "bind",
-            description: "Bind a Telegram chat to a Telegram channel/chat for trend updates",
-        },
-        {
-            command: "unbind",
-            description: "Unbind a Telegram chat from a Telegram channel/chat",
-        }
-    ];
-    bot.command("help", onTelegramHelpCommand);
-    bot.command("hello", onTelegramHelloCommand);
-    bot.command("bind", onTelegramBindCommand);
-    bot.command("unbind", onTelegramUnbindCommand);
-    await bot.api.setMyCommands(commands, {
-        scope: {
-            type: "chat",
-            chat_id: telegramConfig.TELEGRAM_ADMIN_USER_ID!,
-        }
-    });
-    console.info("Telegram bot commands deployed: " + JSON.stringify(commands));
 }
 
 /**

@@ -6,6 +6,11 @@ import * as enable from "./task/enable";
 import * as disable from "./task/disable";
 import * as check from "./task/check";
 import * as help from "./help";
+import * as tgHelp from "./telegram/help";
+import * as tgHello from "./telegram/hello";
+import * as tgBind from "./telegram/bind";
+import * as tgUnbind from "./telegram/unbind";
+import * as tgSetLanguage from "./telegram/set-language";
 
 export const commands = {
     enable,
@@ -17,3 +22,34 @@ export const commands = {
     "set-type": set_type,
     "set-schedule": set_schedule,
 }
+
+export const telegramCommands = [
+    {
+        command: tgHelp.command,
+        description: tgHelp.description,
+    },
+    {
+        command: tgHello.command,
+        description: tgHello.description,
+    },
+    {
+        command: tgBind.command,
+        description: tgBind.description,
+    },
+    {
+        command: tgUnbind.command,
+        description: tgUnbind.description,
+    },
+    {
+        command: tgSetLanguage.command,
+        description: tgSetLanguage.description,
+    }
+];
+
+export const telegramCommandHandlers = {
+    [tgHelp.command]: tgHelp.execute,
+    [tgHello.command]: tgHello.execute,
+    [tgBind.command]: tgBind.execute,
+    [tgUnbind.command]: tgUnbind.execute,
+    [tgSetLanguage.command]: tgSetLanguage.execute,
+};
