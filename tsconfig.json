@@ -44,7 +44,8 @@
       "@services/*": ["src/services/*"],
       "@repo/*": ["src/repositories/*"],
       "@db": ["src/db"],
-      "@utils/*": ["src/utils/*"]
+      "@utils/*": ["src/utils/*"],
+      "@dtos/*": ["src/dtos/*"]
     }
   }
 }

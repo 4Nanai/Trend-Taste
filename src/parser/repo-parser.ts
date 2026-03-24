@@ -13,9 +13,9 @@ export function parseRepoMeta(meta: any, repoBasicDto: RepoBasicDto): RepoDto {
     if (!meta) {
         throw new Error("Meta data is null");
     }
-    const repoDto = {
+    const repoDto : RepoDto = {
         ...repoBasicDto,
-        id: meta.id.toString(),
+        id: BigInt(meta.id),
         stars: meta.stargazers_count,
         forks: meta.forks,
         watchings: meta.subscribers_count,

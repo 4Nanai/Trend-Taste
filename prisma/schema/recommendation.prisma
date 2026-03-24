@@ -3,7 +3,7 @@ model Recommendation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  repoId    String   
+  repoId    BigInt   
   language  LanguageType
   content   String
 

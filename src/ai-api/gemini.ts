@@ -5,7 +5,7 @@ const ai = new GoogleGenAI({});
 
 export async function generate(prompt: string): Promise<string> {
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: process.env['GEMINI_MODEL'] ? process.env['GEMINI_MODEL'] : "gemini-2.5-flash",
         contents: prompt,
     });
     if (!response.text) {

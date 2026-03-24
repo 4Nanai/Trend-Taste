@@ -49,7 +49,7 @@ export async function prepareRecommendationForRepo(repoDto: RepoDto, language: L
  */
 export async function generateRecommendationWithLock(repoDto: RepoDto, language: LanguageType): Promise<string | null> {
     const servLogger = logger.child({repoId: repoDto.id, language});
-    const lockKey = repoDto.id;
+    const lockKey = repoDto.id.toString() + `_${language}`;
     let locked = false;
     try {
         locked = aiFetchingLock.acquire(lockKey);
@@ -75,7 +75,7 @@ export async function generateRecommendationWithLock(repoDto: RepoDto, language:
  * @param language preferred language
  * @returns recommendation string or null
  */
-export async function getRecommendationForRepo(repoId: string, language: LanguageType): Promise<string | null> {
+export async function getRecommendationForRepo(repoId: bigint, language: LanguageType): Promise<string | null> {
     try {
         const recommendation = await findRecommendationByRepoAndLanguage(repoId, language);
         return recommendation ? recommendation.content : null;
@@ -91,7 +91,7 @@ export async function getRecommendationForRepo(repoId: string, language: Languag
  * @param language 
  * @param recommendation 
  */
-export async function createRecommendationForRepo(repoId: string, language: LanguageType, recommendation: string): Promise<void> {
+export async function createRecommendationForRepo(repoId: bigint, language: LanguageType, recommendation: string): Promise<void> {
     try {
         await createRecommendation(repoId, language, recommendation);
         logger.info({repoId, language}, "Created recommendation for repo");

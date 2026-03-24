@@ -1,7 +1,7 @@
 import type { LanguageType } from "@generated/client";
 import { prisma } from "@db";
 
-export async function findRecommendationByRepoAndLanguage(repoId: string, language: LanguageType) {
+export async function findRecommendationByRepoAndLanguage(repoId: bigint, language: LanguageType) {
     return prisma.recommendation.findUnique({
         where: {
             repoId_language: {
@@ -12,7 +12,7 @@ export async function findRecommendationByRepoAndLanguage(repoId: string, langua
     });
 }
 
-export async function createRecommendation(repoId: string, language: LanguageType, recommendation: string) {
+export async function createRecommendation(repoId: bigint, language: LanguageType, recommendation: string) {
     return prisma.recommendation.create({
         data: {
             repoId: repoId,

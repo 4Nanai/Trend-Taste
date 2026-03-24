@@ -1,5 +1,5 @@
 export type RepoDto = {
-    id: string,
+    id: bigint,
     owner: string,
     name: string,
     url: string,

@@ -1,0 +1,19 @@
+enum InteractionType {
+  PUSHED
+  STARRED
+  LIKED
+  DISLIKED
+}
+
+model UserHistory {
+  id              Int             @id @default(autoincrement())
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+ 
+  userId          BigInt
+  repoId          BigInt
+  interactionType InteractionType
+
+  @@index([userId])
+  @@unique([userId, repoId])
+}

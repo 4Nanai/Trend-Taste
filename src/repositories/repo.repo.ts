@@ -1,7 +1,7 @@
 import { prisma } from '@db';
 import type { Repo } from '@generated/client';
 
-export async function findRepoById(repoId: string): Promise<Repo | null> {
+export async function findRepoById(repoId: bigint): Promise<Repo | null> {
     return prisma.repo.findUnique({
         where: {
             id: repoId
@@ -28,13 +28,10 @@ export async function createRepo(repo: Omit<Repo, 'createdAt' | 'updatedAt'>) {
     });
 }
 
-export async function updateRepo(owner: string, name: string, updates: Partial<Omit<Repo, 'createdAt' | 'updatedAt'>>) {
+export async function updateRepo(repoId: bigint,updates: Partial<Omit<Repo, 'createdAt' | 'updatedAt'>>) {
     return prisma.repo.update({
         where: {
-            owner_name: {
-                owner: owner,
-                name: name
-            }
+            id: repoId
         },
         data: updates
     });
