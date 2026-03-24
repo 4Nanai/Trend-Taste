@@ -4,6 +4,7 @@ import { commands, telegramCommands, telegramCommandHandlers } from "./commands/
 import { logger } from "./utils/logger";
 import type { Bot } from "grammy";
 import { languageMenu } from "./commands/telegram/set-language";
+import type { MyContext } from "./bot";
 
 const commandsData = Object.values(commands).map((command: any) => command.data);
 
@@ -30,7 +31,7 @@ export async function deployCommands({ guildId }: DeployCommandsProps) {
     }
 }
 
-export async function deployTelegramBotCommands(bot: Bot) {
+export async function deployTelegramBotCommands(bot: Bot<MyContext>) {
     bot.use(languageMenu);
 
     for (const [command, handler] of Object.entries(telegramCommandHandlers)) {

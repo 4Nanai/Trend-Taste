@@ -4,7 +4,8 @@ import { commands } from "./commands/index";
 import { discordConfig, telegramConfig, discordEnabled, telegramEnabled } from "./config";
 import { initBot, initTelegramBot } from "./bootstrap/init-bot";
 import { logger } from "./utils/logger";
-import { Bot } from "grammy";
+import { Bot, Context, session, type SessionFlavor } from "grammy";
+import type { ChatFullInfo } from "grammy/types";
 console.debug("Telegram Bot enabled: " + telegramEnabled);
 console.debug("Discord Bot enabled: " + discordEnabled);
 
@@ -40,7 +41,12 @@ if (discordClient) {
     discordClient.login(discordConfig.DISCORD_TOKEN);
 }
 
-export const telegramBot = telegramEnabled ? new Bot(String(telegramConfig.TELEGRAM_BOT_TOKEN)) : null;
+
+export interface SessionData {
+  targetChannel: ChatFullInfo | null;
+}
+export type MyContext = Context & SessionFlavor<SessionData>;
+export const telegramBot = telegramEnabled ? new Bot<MyContext>(String(telegramConfig.TELEGRAM_BOT_TOKEN)) : null;
 
 if (telegramBot) {
     await initTelegramBot(telegramBot);
