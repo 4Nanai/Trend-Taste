@@ -7,15 +7,23 @@ enum LanguageType {
   ZH
 }
 
+enum Platform {
+  DISCORD
+  TELEGRAM
+}
+
 model Task {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  channelId String   @unique
+  channelId String
+  platform  Platform     @default(DISCORD)
   taskType  TaskType?
   schedule  DateTime? @db.Time
   timezone  String?
   language  LanguageType @default(EN)
   enabled    Boolean  @default(false)
+
+  @@unique([platform, channelId])
 }
