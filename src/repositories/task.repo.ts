@@ -59,6 +59,26 @@ export async function upsertTaskTimezone(channelId: string, timezone: string, pl
     return _upsertTask(channelId, { timezone }, platform);
 }
 
+export async function bindTask(channelId: string, platform: Platform): Promise<Task> {
+    return prisma.task.create({
+        data: {
+            channelId,
+            platform,
+        },
+    });
+}
+
+export async function deleteTask(channelId: string, platform: Platform): Promise<Task> {
+    return prisma.task.delete({
+        where: {
+            platform_channelId: {
+                platform,
+                channelId,
+            },
+        }
+    })
+}
+
 async function _upsertTask(
     channelId: string,
     data: Partial<Omit<Task, "id" | "createdAt" | "updatedAt" | "channelId" | "platform">>,

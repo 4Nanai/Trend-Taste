@@ -19,6 +19,10 @@ if (DISCORD_TOKEN && DISCORD_APPLICATION_ID && DISCORD_PUBLIC_KEY) {
 
 export var telegramEnabled = false;
 if (TELEGRAM_BOT_TOKEN && TELEGRAM_ADMIN_USER_ID && TELEGRAM_COMMAND_PREFIX) {
+    const adminId = Number(TELEGRAM_ADMIN_USER_ID);
+    if (!Number.isSafeInteger(adminId)) {
+        throw new Error("Invalid TELEGRAM_ADMIN_USER_ID.");
+    }
     telegramEnabled = true;
 }
 

@@ -1,11 +1,12 @@
 import { addTask } from "../scheduled/scheduler";
 import { getTasksToInit } from "../services/task.service";
 import { Client } from "discord.js";
-import { deployCommands } from "../deploy-commands";
+import { deployCommands, onTelegramBindCommand, onTelegramHelloCommand, onTelegramHelpCommand, onTelegramUnbindCommand } from "../deploy-commands";
 import { logger } from "../utils/logger";
 import type { Bot } from "grammy";
 import { Platform } from "@generated/enums";
 import { telegramConfig } from "@/config";
+import { describe } from "node:test";
 
 /**
  * Initialize the bot:
@@ -29,6 +30,7 @@ export async function initTelegramBot(bot: Bot) {
     await Promise.all([
         initTelegramTasks(),
         registerTelegramAdmin(bot),
+        deployTelegramBotCommands(bot)
     ]);
 }
 
@@ -66,6 +68,38 @@ async function deployCommandsToAllGuilds(client: Client) {
     }));
 }
 
+async function deployTelegramBotCommands(bot: Bot) {
+    const commands = [
+        {
+            command: "help",
+            description: "List available commands",
+        },
+        {
+            command: "hello",
+            description: "Say hello to the bot",
+        },
+        {
+            command: "bind",
+            description: "Bind a Telegram chat to a Telegram channel/chat for trend updates",
+        },
+        {
+            command: "unbind",
+            description: "Unbind a Telegram chat from a Telegram channel/chat",
+        }
+    ];
+    bot.command("help", onTelegramHelpCommand);
+    bot.command("hello", onTelegramHelloCommand);
+    bot.command("bind", onTelegramBindCommand);
+    bot.command("unbind", onTelegramUnbindCommand);
+    await bot.api.setMyCommands(commands, {
+        scope: {
+            type: "chat",
+            chat_id: telegramConfig.TELEGRAM_ADMIN_USER_ID!,
+        }
+    });
+    console.info("Telegram bot commands deployed: " + JSON.stringify(commands));
+}
+
 /**
  * Register the Telegram admin user to be able to use bot commands
  * @param bot
@@ -73,40 +107,11 @@ async function deployCommandsToAllGuilds(client: Client) {
 async function registerTelegramAdmin(bot: Bot) {
     const adminUserId = telegramConfig.TELEGRAM_ADMIN_USER_ID;
     bot.use(async (ctx, next) => {
-        const text = ctx.message?.text?.trim();
-        const isBotCommand = text?.startsWith(`/${telegramConfig.TELEGRAM_COMMAND_PREFIX}`);
-        if (isBotCommand && ctx.from?.id.toString() === adminUserId) {
+        if (ctx.from?.id.toString() === adminUserId) {
             logger.debug({ userId: ctx.from?.id }, "Admin Telegram command received");
             await next();
         } else {
             return;
-        }
-    });
-
-    bot.on("message::bot_command", async (ctx) => {
-        const text = ctx.message?.text?.trim() ?? "";
-        const [baseCommand = "", ...args] = text.split(/\s+/);
-        const normalizedBaseCommand = baseCommand.split("@")[0]?.toLowerCase();
-        const subCommand = args[0]?.toLowerCase();
-
-        logger.debug({ baseCommand: normalizedBaseCommand, subCommand, args }, "Received Telegram command");
-
-        if (normalizedBaseCommand !== `/${telegramConfig.TELEGRAM_COMMAND_PREFIX}`) {
-            return;
-        }
-
-        switch (subCommand) {
-            case "help":
-                await ctx.reply(`Available commands:\n/${telegramConfig.TELEGRAM_COMMAND_PREFIX} help\n/${telegramConfig.TELEGRAM_COMMAND_PREFIX} hello`);
-                return;
-
-            case "hello":
-                await ctx.reply("Hello from Trend Taste! 👋");
-                return;
-            
-            default:
-                await ctx.reply(`Available commands:\n/${telegramConfig.TELEGRAM_COMMAND_PREFIX} help\n/${telegramConfig.TELEGRAM_COMMAND_PREFIX} hello`);
-                return;
         }
     });
 }

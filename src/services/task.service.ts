@@ -1,7 +1,7 @@
 import { Platform, type Task, type TaskType, type LanguageType } from "@generated/client";
 import { prisma } from "@db";
 import { DateTime } from "luxon";
-import { upsertTaskEnabledStatus, upsertTaskLanguage, upsertTaskSchedule, upsertTaskType, upsertTaskTimezone, getTasksByEnabledStatusByPlatform, getTasksToInitializeByPlatform } from "../repositories/task.repo";
+import { bindTask, upsertTaskEnabledStatus, upsertTaskLanguage, upsertTaskSchedule, upsertTaskType, upsertTaskTimezone, getTasksByEnabledStatusByPlatform, getTasksToInitializeByPlatform, deleteTask } from "../repositories/task.repo";
 import { removeTask, rescheduleTask } from "../scheduled/scheduler";
 import { logger } from "../utils/logger";
 
@@ -15,6 +15,36 @@ export async function getTaskById(taskId: number): Promise<Task | null> {
         const task = await prisma.task.findUnique({
             where: { id: taskId }
         });
+        return task;
+    } catch (error) {
+        throw error;
+    }
+}
+
+/**
+ * Create a task for a channel and platform
+ * @param channelId The channel/chat ID of the task to create
+ * @param platform The target platform
+ * @returns The created task
+ */
+export async function createTask(channelId: string, platform: Platform = Platform.DISCORD): Promise<Task> {
+    try {
+        const task = await bindTask(channelId, platform);
+        return task;
+    } catch (error) {
+        throw error;
+    }
+}
+
+/**
+ * Delete a task by its channel ID and platform
+ * @param channelId The channel/chat ID of the task to delete
+ * @param platform The target platform
+ * @returns The deleted task
+ */
+export async function unbindTask(channelId: string, platform: Platform = Platform.DISCORD): Promise<Task> {
+    try {
+        const task = await deleteTask(channelId, platform);
         return task;
     } catch (error) {
         throw error;
