@@ -1,6 +1,7 @@
 import { CronJob } from "cron";
 import { runTask } from "./runner.js";
 import { logger } from "../utils/logger.js";
+import { Platform } from "@generated/enums.js";
 
 // A set of taskId
 // Only enabled tasks are stored here
@@ -12,7 +13,7 @@ const EnabledTasks: Map<number, CronJob> = new Map();
  * @param time 
  * @param timezone
  */
-export function addTask(taskId: number, time: string, timezone: string) {
+export function addTask(taskId: number, time: string, timezone: string, platform: Platform = Platform.DISCORD) {
     const schedulerLogger = logger.child({taskId, scheduledTime: time, timezone});
     const job = new CronJob(
         time,
