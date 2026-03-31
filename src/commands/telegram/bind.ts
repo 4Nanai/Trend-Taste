@@ -5,7 +5,7 @@ import { logger } from "@utils/logger";
 import type { ChatFullInfo } from "grammy/types";
 
 export const command = "bind";
-export const description = "/bind [channelID] - Bind a Telegram channel";
+export const description = "/bind <ChannelID> - Bind a Telegram channel";
 
 export async function execute(ctx: Context) {
     const text = ctx.message?.text?.trim() ?? "";
@@ -13,7 +13,7 @@ export async function execute(ctx: Context) {
     const channelId = parts[1];
 
     if (!channelId) {
-        await ctx.reply("Usage: /bind <channelID>\nExample: /bind -1001234567890");
+        await ctx.reply("Usage: /bind <ChannelID>\nExample: /bind -1001234567890");
         return;
     }
 

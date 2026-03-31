@@ -12,15 +12,25 @@ export const description = "/language [channelID] - Set the bot's reply language
 
 export const languageMenu = new Menu<MyContext>("language-menu")
     .text("English", async (ctx) => {
-        await _setEnglish(ctx);
+        const error = await _setEnglish(ctx);
         ctx.menu.close();
-        await ctx.editMessageText("Language set to English.");
+        if (error) {
+            await ctx.editMessageText(`Error: ${error.message}`);
+        } else {
+            await ctx.editMessageText(`Language of channel ${ctx.session.targetChannel?.title} set to English.`);
+        }
+        ctx.session.targetChannel = null;
     })
     .row()
     .text("简体中文", async (ctx) => {
-        await _setSimplifiedChinese(ctx);
+        const error = await _setSimplifiedChinese(ctx);
         ctx.menu.close();
-        await ctx.editMessageText("语言已设置为简体中文。");
+        if (error) {
+            await ctx.editMessageText(`Error: ${error.message}`);
+        } else {
+            await ctx.editMessageText(`频道 ${ctx.session.targetChannel?.title} 的推送语言已设置为简体中文。`);
+        }
+        ctx.session.targetChannel = null;
     });
 
 export async function execute(ctx: MyContext) {
@@ -30,6 +40,11 @@ export async function execute(ctx: MyContext) {
 
     if (!channelId) {
         await ctx.reply("Usage: /language <channelID>\nExample: /language -1001234567890");
+        return;
+    }
+
+    if (ctx.session.targetChannel) {
+        await ctx.reply("A channel is already selected for language setting. Please complete the current language setting process before starting a new one.");
         return;
     }
 
@@ -52,12 +67,11 @@ export async function execute(ctx: MyContext) {
     });
 }
 
-async function _setEnglish(ctx: MyContext) {
+async function _setEnglish(ctx: MyContext): Promise<Error | null> {
     const channel = ctx.session.targetChannel;
     if (!channel) {
-        await ctx.reply("No target channel found in session. Please try the command again.");
         logger.error("No target channel found in session when setting language");
-        return;
+        return new Error("No target channel found in session");
     }
     const cmdLogger = logger.child({command: `/${command}}`, channelId: channel.id})
     cmdLogger.info("Command invoked");
@@ -65,21 +79,19 @@ async function _setEnglish(ctx: MyContext) {
     try {
         await setTaskLanguage(String(channel.id), LanguageType.EN);
         cmdLogger.info("Command executed successfully");
-        await ctx.reply(`Language has been set to English for channel ${channel.title}`);
+        return null;
     } catch (error) {
         cmdLogger.error({err: error}, "Command execution failed");
-        await ctx.reply(`Failed to set language for channel ${channel.title}.`);
+        return new Error(`Failed to set language for channel ${channel.title}. Please try again later.`);
     }
-
-    ctx.session.targetChannel = null;
 }
 
-async function _setSimplifiedChinese(ctx: MyContext) {
+async function _setSimplifiedChinese(ctx: MyContext): Promise<Error | null> {
     const channel = ctx.session.targetChannel;
     if (!channel) {
-        await ctx.reply("No target channel found in session. Please try the command again.");
+
         logger.error("No target channel found in session when setting language");
-        return;
+        return new Error("No target channel found in session");
     }
     const cmdLogger = logger.child({command: `/${command}}`, channelId: channel?.id})
     cmdLogger.info("Command invoked");
@@ -87,10 +99,9 @@ async function _setSimplifiedChinese(ctx: MyContext) {
     try {
         await setTaskLanguage(String(channel.id), LanguageType.ZH);
         cmdLogger.info("Command executed successfully");
-        await ctx.reply(`Language has been set to Simplified Chinese for channel ${channel.title}`);
+        return null;
     } catch (error) {
         cmdLogger.error({err: error}, "Command execution failed");
-        await ctx.reply(`Failed to set language for channel ${channel.title}.`);
+        return new Error(`Failed to set language for channel ${channel.title}. Please try again later.`);
     }
-    ctx.session.targetChannel = null;
 }

@@ -5,7 +5,7 @@ import { logger } from "@utils/logger";
 import type { ChatFullInfo } from "grammy/types";
 
 export const command = "unbind";
-export const description = "/unbind [channelID] - Unbind a Telegram channel";
+export const description = "/unbind <ChannelID> - Unbind a Telegram channel";
 
 export async function execute(ctx: Context) {
     const text = ctx.message?.text?.trim() ?? "";
@@ -13,7 +13,7 @@ export async function execute(ctx: Context) {
     const channelId = parts[1];
 
     if (!channelId) {
-        await ctx.reply("Usage: /unbind <channelID>\nExample: /unbind -1001234567890");
+        await ctx.reply("Usage: /unbind <ChannelID>\nExample: /unbind -1001234567890");
         return;
     }
 
@@ -22,12 +22,12 @@ export async function execute(ctx: Context) {
     try {
         channel = await ctx.api.getChat(channelId);
     } catch (error) {
-        await ctx.reply("Failed to unbind this channelID. Please make sure the channelId is correct.");
-        logger.error({ err: error }, "Error handling telegram unbind command - invalid channelId");
+        await ctx.reply("Failed to unbind this ChannelID. Please make sure the ChannelID is correct.");
+        logger.error({ err: error }, "Error handling telegram unbind command - invalid ChannelID");
         return;
     }
     if (!channel) {
-        await ctx.reply("Channel not found. Please make sure the channelId is correct.");
+        await ctx.reply("Channel not found. Please make sure the ChannelID is correct.");
         logger.error({ channelId }, "Error handling telegram bind command - channel not found");
         return;
     }
