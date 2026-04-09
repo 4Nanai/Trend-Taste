@@ -2,15 +2,15 @@ import { logger } from "@/utils/logger";
 import type { Context } from "grammy";
 import { Menu } from "@grammyjs/menu";
 import type { ChatFullInfo } from "grammy/types";
-import type { MyContext } from "@/bot";
+import type { SessionContext } from "@/bot";
 import { setTaskLanguage } from "@/services/task.service";
 import { LanguageType } from "@generated/enums";
 import { MessageFlags } from "discord.js";
 
 export const command = "language";
-export const description = "/language [channelID] - Set the bot's reply language for a specific channel"
+export const description = "/language <ChannelID> - Set the bot's reply language for a specific channel"
 
-export const languageMenu = new Menu<MyContext>("language-menu")
+export const languageMenu = new Menu<SessionContext>("language-menu")
     .text("English", async (ctx) => {
         const error = await _setEnglish(ctx);
         ctx.menu.close();
@@ -33,13 +33,13 @@ export const languageMenu = new Menu<MyContext>("language-menu")
         ctx.session.targetChannel = null;
     });
 
-export async function execute(ctx: MyContext) {
+export async function execute(ctx: SessionContext) {
     const text = ctx.message?.text?.trim() ?? "";
     const parts = text.split(/\s+/);
     const channelId = parts[1];
 
     if (!channelId) {
-        await ctx.reply("Usage: /language <channelID>\nExample: /language -1001234567890");
+        await ctx.reply("Usage: /language <ChannelID>\nExample: /language -1001234567890");
         return;
     }
 
@@ -67,7 +67,7 @@ export async function execute(ctx: MyContext) {
     });
 }
 
-async function _setEnglish(ctx: MyContext): Promise<Error | null> {
+async function _setEnglish(ctx: SessionContext): Promise<Error | null> {
     const channel = ctx.session.targetChannel;
     if (!channel) {
         logger.error("No target channel found in session when setting language");
@@ -86,7 +86,7 @@ async function _setEnglish(ctx: MyContext): Promise<Error | null> {
     }
 }
 
-async function _setSimplifiedChinese(ctx: MyContext): Promise<Error | null> {
+async function _setSimplifiedChinese(ctx: SessionContext): Promise<Error | null> {
     const channel = ctx.session.targetChannel;
     if (!channel) {
 

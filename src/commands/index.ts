@@ -11,6 +11,7 @@ import * as tgHello from "./telegram/hello";
 import * as tgBind from "./telegram/bind";
 import * as tgUnbind from "./telegram/unbind";
 import * as tgSetLanguage from "./telegram/set-language";
+import * as tgSetType from "./telegram/set-type";
 
 export const commands = {
     enable,
@@ -43,7 +44,11 @@ export const telegramCommands = [
     {
         command: tgSetLanguage.command,
         description: tgSetLanguage.description,
-    }
+    },
+    {
+        command: tgSetType.command,
+        description: tgSetType.description,
+    },
 ];
 
 export const telegramCommandHandlers = {
@@ -52,4 +57,5 @@ export const telegramCommandHandlers = {
     [tgBind.command]: tgBind.execute,
     [tgUnbind.command]: tgUnbind.execute,
     [tgSetLanguage.command]: tgSetLanguage.execute,
+    [tgSetType.command]: tgSetType.execute,
 };

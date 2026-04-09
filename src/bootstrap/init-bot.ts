@@ -6,7 +6,7 @@ import { logger } from "../utils/logger";
 import { session, type Bot, type Context, type SessionFlavor } from "grammy";
 import { Platform } from "@generated/enums";
 import { telegramConfig } from "@/config";
-import type { MyContext, SessionData } from "@/bot";
+import type { SessionContext, SessionData } from "@/bot";
 
 
 /**
@@ -27,7 +27,7 @@ export async function initBot(client: Client) {
  * - Initialize tasks
  * @param bot 
  */
-export async function initTelegramBot(bot: Bot<MyContext>) {
+export async function initTelegramBot(bot: Bot<SessionContext>) {
     initTelegramBotSession(bot);
     await Promise.all([
         initTelegramTasks(),
@@ -74,7 +74,7 @@ async function deployCommandsToAllGuilds(client: Client) {
  * Register the Telegram admin user to be able to use bot commands
  * @param bot
  */
-async function registerTelegramAdmin(bot: Bot<MyContext>) {
+async function registerTelegramAdmin(bot: Bot<SessionContext>) {
     const adminUserId = telegramConfig.TELEGRAM_ADMIN_USER_ID;
     bot.use(async (ctx, next) => {
         if (ctx.from?.id.toString() === adminUserId) {
@@ -87,7 +87,7 @@ async function registerTelegramAdmin(bot: Bot<MyContext>) {
 }
 
 
-function initTelegramBotSession(bot: Bot<MyContext>) {
+function initTelegramBotSession(bot: Bot<SessionContext>) {
     function initial(): SessionData {
         return {
             targetChannel: null,

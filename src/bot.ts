@@ -72,8 +72,8 @@ if (discordClient) {
 export interface SessionData {
   targetChannel: ChatFullInfo | null;
 }
-export type MyContext = Context & SessionFlavor<SessionData>;
-export const telegramBot = telegramEnabled ? new Bot<MyContext>(String(telegramConfig.TELEGRAM_BOT_TOKEN)) : null;
+export type SessionContext = Context & SessionFlavor<SessionData>;
+export const telegramBot = telegramEnabled ? new Bot<SessionContext>(String(telegramConfig.TELEGRAM_BOT_TOKEN)) : null;
 
 if (telegramBot) {
     await initTelegramBot(telegramBot);
