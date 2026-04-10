@@ -4,7 +4,7 @@ import { Menu } from "@grammyjs/menu";
 import type { ChatFullInfo } from "grammy/types";
 import type { SessionContext } from "@/bot";
 import { setTaskLanguage } from "@/services/task.service";
-import { LanguageType } from "@generated/enums";
+import { LanguageType, Platform } from "@generated/enums";
 import { MessageFlags } from "discord.js";
 
 export const command = "language";
@@ -97,7 +97,7 @@ async function _setSimplifiedChinese(ctx: SessionContext): Promise<Error | null>
     cmdLogger.info("Command invoked");
 
     try {
-        await setTaskLanguage(String(channel.id), LanguageType.ZH);
+        await setTaskLanguage(String(channel.id), LanguageType.ZH, Platform.TELEGRAM);
         cmdLogger.info("Command executed successfully");
         return null;
     } catch (error) {

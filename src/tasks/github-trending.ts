@@ -1,6 +1,6 @@
 import type { RepoDto } from "../dtos/Repo.dto";
 import type { FineRepoDto } from "../dtos/FineRepo.dto";
-import type { LanguageType } from "@generated/client";
+import { Platform, type LanguageType } from "@generated/client";
 import type { MessageCreateOptions } from "discord.js";
 import pLimit from 'p-limit';
 import { ActionRowBuilder, ButtonStyle, Client, EmbedBuilder, ButtonBuilder } from "discord.js";
@@ -10,6 +10,11 @@ import { logger } from "@utils/logger";
 import { prepareRepo } from "@services/repo.service";
 import { prepareRecommendationForRepo } from "@services/recommendation.service";
 import { prepareSummaryForRepoGroup } from "@services/summary.service";
+import type { Bot } from "grammy";
+import type { SessionContext } from "@/bot";
+
+import { fmt, bold, italic, link, type FormattedString, b, i } from "@grammyjs/parse-mode";
+import { parseMarkdownToHTML } from "@/utils/parser";
 
 
 /**
@@ -35,6 +40,30 @@ export async function runGithubTrendingTask(client: Client, channelId: string, l
         await pushTrendingToChannel(client, channelId, messageRepo);
     } catch (error) {
         logger.error({err: error}, "Error running github trending task");
+        throw error;
+    }
+}
+
+/**
+ * Runs the github trending task for telegram
+ * 1. Get trending repositories from github rss api
+ *    Prepare them with meta information from github api
+ * 2. Prepare recommendations based on AI to the repo list
+ * 3. Prepare a brief summary for the whole repo list
+ * 4. Build their message format
+ * 5. Pushes the message to the channel
+ * @param bot telegram bot
+ */
+export async function runTelegramGithubTrendingTask(bot: Bot<SessionContext>, channelId: string, language: LanguageType) {
+    try {
+        const repoList = await prepareTrendingRepos();
+        const fineRepoList = await prepareFineRepoList(repoList, language);
+        const summary = await prepareSummary(fineRepoList, language);
+
+        const summaryMessage = formatSummaryToTelegramMessage(summary);
+        await pushSummaryToTelegramChannel(bot, channelId, summaryMessage)
+    } catch (error) {
+        logger.error({err: error}, "Error running telegram github trending task");
         throw error;
     }
 }
@@ -143,6 +172,24 @@ async function pushSummaryToChannel(client: Client, channelId: string, summary: 
 }
 
 /**
+ * Pushes the summary to the telegram channel
+ * @param bot telegram bot
+ * @param channelId channel id
+ * @param summary summary message string
+ */
+async function pushSummaryToTelegramChannel(bot: Bot<SessionContext>, channelId: string, summary: string) {
+    try {
+        await bot.api.sendMessage(channelId, summary, {
+            parse_mode: "HTML"
+        })
+        logger.info({channelId}, "Pushed summary to telegram channel successfully");
+    }
+    catch (error) {
+        logger.error({err: error, channelId}, "Error pushing summary to telegram channel");
+    }
+}
+
+/**
  * Formats the summary to an embed
  * @param summary summary string 
  * @returns embed
@@ -162,6 +209,14 @@ function formatSummaryToEmbed(summary: string): EmbedBuilder {
     return embed;
 }
 
+/**
+ * Formats the summary to a message string for telegram
+ * @param summary summary string
+ * @returns message string
+ */
+function formatSummaryToTelegramMessage(summary: string): string {
+    return `<b>Trending Repositories Summary</b>\n\n${parseMarkdownToHTML(summary)}\n\n<i>Powered by:</i> <a href="https://github.com/yyxff/Trend-Taste">Trend Taste</a>`
+}
 /**
  * Formats the repo list to an embed
  * @param repoList repo list

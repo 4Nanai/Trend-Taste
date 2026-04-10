@@ -1,11 +1,14 @@
-import type { MyContext } from "@/bot";
+import type { SessionContext } from "@/bot";
+import { runTask } from "@/scheduled/runner";
+import { getTaskByChannelId } from "@/services/task.service";
 import { logger } from "@/utils/logger";
+import { Platform } from "@generated/enums";
 import type { ChatFullInfo } from "grammy/types";
 
 export const command = "run";
 export const description = "/run <ChannelID> - Fetches the trending repositories from GitHub";
 
-export async function execute(ctx: MyContext) {
+export async function execute(ctx: SessionContext) {
     const text = ctx.message?.text?.trim() ?? "";
     const parts = text.split(/\s+/);
     const channelId = parts[1];
@@ -14,18 +17,19 @@ export async function execute(ctx: MyContext) {
         await ctx.reply("Usage: /run <ChannelID>\nExample: /run -1001234567890");
         return;
     }
-
-    var channel: ChatFullInfo
+    const cmdLogger = logger.child({ command: `/${command}`, channelId: channelId });
+    cmdLogger.info("Command invoked");
     try {
-        channel = await ctx.api.getChat(channelId);
+        const task = await getTaskByChannelId(channelId, Platform.TELEGRAM);
+        if (!task) {
+            cmdLogger.warn("No task configured for this channel");
+            return ctx.reply("No task configured for this channel. Please set up a task first by /set-type.");
+        }
+        runTask(task.id, Platform.TELEGRAM);
+        cmdLogger.info({ taskType: task.taskType }, "Task started successfully");
+        return ctx.reply(`Task ${task.taskType} started. Check the channel for results shortly.`);
     } catch (error) {
-        await ctx.reply("Failed to find this channelId. Please make sure the channelId is correct and that I am a member of that channel/chat.");
-        logger.error({ err: error }, "Error handling telegram run command - invalid channelId");
-        return;
-    }
-    if (!channel) {
-        await ctx.reply("Channel not found. Please make sure the channelId is correct and that I am a member of that channel/chat.");
-        logger.error({ channelId }, "Error handling telegram run command - channel not found");
-        return;
+        cmdLogger.error({err: error}, "Error in running task");
+        return ctx.reply("Error retrieving task configuration. Please try again later.");
     }
 }

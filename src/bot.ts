@@ -78,5 +78,5 @@ export const telegramBot = telegramEnabled ? new Bot<SessionContext>(String(tele
 if (telegramBot) {
     await initTelegramBot(telegramBot);
     telegramBot.start();
-    console.info("Telegram bot is ready! 🤖");
+    console.debug("Telegram bot is ready! 🤖");
 }

@@ -1,5 +1,5 @@
 import type { FineRepoDto } from "../dtos/FineRepo.dto";
-import type { LanguageType } from "@generated/client";
+import { type LanguageType } from "@generated/client";
 import { logger } from "../utils/logger";
 import { summaryFetchingLock } from "../utils/lock";
 import { computeRepoGroupHash } from "../utils/repo-hash";
