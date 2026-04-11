@@ -1,11 +1,10 @@
 import { logger } from "@/utils/logger";
-import type { Context } from "grammy";
 import { Menu } from "@grammyjs/menu";
 import type { ChatFullInfo } from "grammy/types";
 import type { SessionContext } from "@/bot";
 import { setTaskLanguage } from "@/services/task.service";
 import { LanguageType, Platform } from "@generated/enums";
-import { MessageFlags } from "discord.js";
+import { getTaskByChannelId } from "@/repositories/task.repo";
 
 export const command = "language";
 export const description = "/language <ChannelID> - Set the bot's reply language for a specific channel"
@@ -17,9 +16,10 @@ export const languageMenu = new Menu<SessionContext>("language-menu")
         if (error) {
             await ctx.editMessageText(`Error: ${error.message}`);
         } else {
-            await ctx.editMessageText(`Language of channel ${ctx.session.targetChannel?.title} set to English.`);
+            await ctx.editMessageText(`Language of channel <i>"${ctx.session.targetChannel?.title}"</i> set to English.`, {
+                parse_mode: "HTML"
+            });
         }
-        ctx.session.targetChannel = null;
     })
     .row()
     .text("简体中文", async (ctx) => {
@@ -28,42 +28,65 @@ export const languageMenu = new Menu<SessionContext>("language-menu")
         if (error) {
             await ctx.editMessageText(`Error: ${error.message}`);
         } else {
-            await ctx.editMessageText(`频道 ${ctx.session.targetChannel?.title} 的推送语言已设置为简体中文。`);
+            await ctx.editMessageText(`频道 <i>"${ctx.session.targetChannel?.title}"</i> 的推送语言已设置为简体中文。`, {
+                parse_mode: "HTML"
+            });
         }
-        ctx.session.targetChannel = null;
     });
 
 export async function execute(ctx: SessionContext) {
     const text = ctx.message?.text?.trim() ?? "";
     const parts = text.split(/\s+/);
-    const channelId = parts[1];
+    let channelId = parts[1];
+    let channel: ChatFullInfo | null = null;
+
+    if (channelId && ctx.session.targetChannel && String(ctx.session.targetChannel.id) !== channelId) {
+        await ctx.reply("A channel is already selected for language setting. Please complete the current language setting process before starting a new one.");
+        return;
+    }
+
+    if (!channelId && ctx.session.targetChannel) {
+        channel = ctx.session.targetChannel;
+        channelId = String(channel.id);
+    }
 
     if (!channelId) {
         await ctx.reply("Usage: /language <ChannelID>\nExample: /language -1001234567890");
         return;
     }
 
-    if (ctx.session.targetChannel) {
-        await ctx.reply("A channel is already selected for language setting. Please complete the current language setting process before starting a new one.");
+    try {
+        const task = await getTaskByChannelId(channelId, Platform.TELEGRAM);
+        if (!task) {
+            await ctx.reply("No task configured for this channel. Please set up a task first by /set-type.");
+            logger.warn({ channelId }, "No task configured for this channel when setting language");
+            return;
+        }
+    } catch (error) {
+        await ctx.reply("Error retrieving task configuration for this channel. Please try again later.");
+        logger.error({ err: error, channelId }, "Error retrieving task configuration when setting language");
         return;
     }
 
-    var channel: ChatFullInfo
     try {
-        channel = await ctx.api.getChat(channelId);
+        if (!channel) {
+            channel = await ctx.api.getChat(channelId);
+        }
     } catch (error) {
         await ctx.reply("Failed to find this channelId. Please make sure the channelId is correct and that I am a member of that channel/chat.");
         logger.error({ err: error }, "Error handling telegram set-language command - invalid channelId");
         return;
     }
+
     if (!channel) {
         await ctx.reply("Channel not found. Please make sure the channelId is correct and that I am a member of that channel/chat.");
         logger.error({ channelId }, "Error handling telegram set-language command - channel not found");
         return;
     }
     ctx.session.targetChannel = channel;
-    await ctx.reply("Please select a language:", {
+    await ctx.reply(`Please select a language for channel <i>"${channel.title}"</i>:`, {
         reply_markup: languageMenu,
+        parse_mode: "HTML",
     });
 }
 
@@ -77,7 +100,7 @@ async function _setEnglish(ctx: SessionContext): Promise<Error | null> {
     cmdLogger.info("Command invoked");
 
     try {
-        await setTaskLanguage(String(channel.id), LanguageType.EN);
+        await setTaskLanguage(String(channel.id), LanguageType.EN, Platform.TELEGRAM);
         cmdLogger.info("Command executed successfully");
         return null;
     } catch (error) {

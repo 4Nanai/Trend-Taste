@@ -1,4 +1,5 @@
 import type { SessionContext } from "@/bot";
+import { getTaskByChannelId } from "@/repositories/task.repo";
 import { setTaskType } from "@/services/task.service";
 import { logger } from "@/utils/logger";
 import { Platform, TaskType } from "@generated/enums";
@@ -14,9 +15,10 @@ export const typeMenu = new Menu<SessionContext>("type-menu").text("Github Trend
     if (error) {
         await ctx.editMessageText(`Error: ${error.message}`);
     } else {
-        await ctx.editMessageText(`Task type of channel ${ctx.session.targetChannel?.title} set to Github Trending.`);
+        await ctx.editMessageText(`Task type of channel <i>"${ctx.session.targetChannel?.title}"</i> set to Github Trending.`, {
+            parse_mode: "HTML"
+        });
     }
-    ctx.session.targetChannel = null;
 })
 
 async function _setGithubTreading(ctx: SessionContext): Promise<Error | null> {
@@ -39,24 +41,47 @@ async function _setGithubTreading(ctx: SessionContext): Promise<Error | null> {
 export async function execute(ctx: SessionContext) {
     const text = ctx.message?.text?.trim() ?? "";
     const parts = text.split(/\s+/);
-    const channelId = parts[1];
-    if (!channelId) {
-        await ctx.reply("Usage: /type <ChannelID>\nExample: /type -1001234567890");
-        return;
-    }
-    if (ctx.session.targetChannel) {
+    let channelId = parts[1];
+    let channel: ChatFullInfo | null = null;
+
+    if (channelId && ctx.session.targetChannel && String(ctx.session.targetChannel.id) !== channelId) {
         await ctx.reply("A channel is already selected for language setting. Please complete the current language setting process before starting a new one.");
         return;
     }
 
-    var channel: ChatFullInfo;
+    if (!channelId && ctx.session.targetChannel) {
+        channel = ctx.session.targetChannel;
+        channelId = String(channel.id);
+    }
+
+    if (!channelId) {
+        await ctx.reply("Usage: /type <ChannelID>\nExample: /type -1001234567890");
+        return;
+    }
+
+    // Check if the channel is already bound to a task
     try {
-        channel = await ctx.api.getChat(channelId);
+        const task = await getTaskByChannelId(channelId, Platform.TELEGRAM);
+        if (!task) {
+            await ctx.reply("Unbound channel. Please bind this channel first using /bind command before setting a task type.");
+            return;
+        }
+    } catch (error) {
+        await ctx.reply("Error retrieving task information for this channel. Please try again later.");
+        logger.error({ err: error }, "Error handling telegram set-type command - error retrieving task information");
+        return;
+    }
+
+    try {
+        if (!channel) {
+            channel = await ctx.api.getChat(channelId);
+        }
     } catch (error) {
         await ctx.reply("Failed to find this channelId. Please make sure the channelId is correct and that I am a member of that channel/chat.");
         logger.error({ err: error }, "Error handling telegram set-language command - invalid channelId");
         return;
     }
+
     if (!channel) {
         await ctx.reply("Channel not found. Please make sure the channelId is correct and that I am a member of that channel/chat.");
         logger.error({ channelId }, "Error handling telegram set-language command - channel not found");
@@ -64,7 +89,8 @@ export async function execute(ctx: SessionContext) {
     }
 
     ctx.session.targetChannel = channel;
-    await ctx.reply("Please select a task type:", {
+    await ctx.reply(`Please select a task type for channel <i>"${channel.title}"</i>`, {
         reply_markup: typeMenu,
+        parse_mode: "HTML",
     })
 }

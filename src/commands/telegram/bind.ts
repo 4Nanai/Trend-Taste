@@ -1,13 +1,13 @@
-import type { Context } from "grammy";
 import { Platform } from "@generated/client";
 import { createTask } from "@services/task.service";
 import { logger } from "@utils/logger";
 import type { ChatFullInfo } from "grammy/types";
+import type { SessionContext } from "@/bot";
 
 export const command = "bind";
 export const description = "/bind <ChannelID> - Bind a Telegram channel";
 
-export async function execute(ctx: Context) {
+export async function execute(ctx: SessionContext) {
     const text = ctx.message?.text?.trim() ?? "";
     const parts = text.split(/\s+/);
     const channelId = parts[1];
@@ -31,5 +31,7 @@ export async function execute(ctx: Context) {
         return;
     }
     await createTask(channelId, Platform.TELEGRAM);
+    // Store the bound channel in session
+    ctx.session.targetChannel = channel;
     await ctx.reply(`Bound bot to channel \"${channel.title ?? channelId}\" successfully.`);
 }

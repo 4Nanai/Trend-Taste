@@ -1,13 +1,12 @@
-import type { Context } from "grammy";
 import { Platform } from "@generated/client";
 import { unbindTask } from "@services/task.service";
 import { logger } from "@utils/logger";
-import type { ChatFullInfo } from "grammy/types";
+import type { SessionContext } from "@/bot";
 
 export const command = "unbind";
 export const description = "/unbind <ChannelID> - Unbind a Telegram channel";
 
-export async function execute(ctx: Context) {
+export async function execute(ctx: SessionContext) {
     const text = ctx.message?.text?.trim() ?? "";
     const parts = text.split(/\s+/);
     const channelId = parts[1];
@@ -17,20 +16,16 @@ export async function execute(ctx: Context) {
         return;
     }
 
-    var channel: ChatFullInfo
-
     try {
-        channel = await ctx.api.getChat(channelId);
+        await unbindTask(channelId, Platform.TELEGRAM);
     } catch (error) {
         await ctx.reply("Failed to unbind this ChannelID. Please make sure the ChannelID is correct.");
         logger.error({ err: error }, "Error handling telegram unbind command - invalid ChannelID");
         return;
     }
-    if (!channel) {
-        await ctx.reply("Channel not found. Please make sure the ChannelID is correct.");
-        logger.error({ channelId }, "Error handling telegram bind command - channel not found");
-        return;
+    // Clear target channel in session
+    if (ctx.session.targetChannel && String(ctx.session.targetChannel.id) === channelId) {
+        ctx.session.targetChannel = null;
     }
-    await unbindTask(channelId, Platform.TELEGRAM);
-    await ctx.reply(`Unbound bot from channel \"${channel.title ?? channelId}\" successfully.`);
+    await ctx.reply(`Successfully unbound channel.`);
 }

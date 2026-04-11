@@ -10,12 +10,17 @@ export const description = "/run <ChannelID> - Fetches the trending repositories
 export async function execute(ctx: SessionContext) {
     const text = ctx.message?.text?.trim() ?? "";
     const parts = text.split(/\s+/);
-    const channelId = parts[1];
+    let channelId = parts[1];
+
+    if (!channelId && ctx.session.targetChannel) {
+        channelId = String(ctx.session.targetChannel.id);
+    }
 
     if (!channelId) {
         await ctx.reply("Usage: /run <ChannelID>\nExample: /run -1001234567890");
         return;
     }
+
     const cmdLogger = logger.child({ command: `/${command}`, channelId: channelId });
     cmdLogger.info("Command invoked");
     try {
