@@ -1,6 +1,6 @@
 import type { RepoDto } from "../dtos/Repo.dto";
 import type { FineRepoDto } from "../dtos/FineRepo.dto";
-import { Platform, type LanguageType } from "@generated/client";
+import { type LanguageType } from "@generated/client";
 import type { MessageCreateOptions } from "discord.js";
 import pLimit from 'p-limit';
 import { ActionRowBuilder, ButtonStyle, Client, EmbedBuilder, ButtonBuilder } from "discord.js";
@@ -13,8 +13,7 @@ import { prepareSummaryForRepoGroup } from "@services/summary.service";
 import type { Bot } from "grammy";
 import type { SessionContext } from "@/bot";
 
-import { fmt, bold, italic, link, type FormattedString, b, i } from "@grammyjs/parse-mode";
-import { parseMarkdownToHTML } from "@/utils/parser";
+import { convertMdToHtml, escapeHTML, telegramFooter } from "@/utils/telegram";
 
 
 /**
@@ -61,7 +60,10 @@ export async function runTelegramGithubTrendingTask(bot: Bot<SessionContext>, ch
         const summary = await prepareSummary(fineRepoList, language);
 
         const summaryMessage = formatSummaryToTelegramMessage(summary);
+        const messageRepo = fineRepoList.map(fineRepo => formatRepoToTelegramMessage(fineRepo))
+
         await pushSummaryToTelegramChannel(bot, channelId, summaryMessage)
+        await pushTrendingToTelegramChannel(bot, channelId, messageRepo);
     } catch (error) {
         logger.error({err: error}, "Error running telegram github trending task");
         throw error;
@@ -154,6 +156,25 @@ export async function pushTrendingToChannel(client: Client, channelId: string, m
 }
 
 /**
+ * Pushes the trending repositories to the telegram channel
+ * @param bot telegram bot
+ * @param channelId channel id
+ * @param messages message list with image urls
+ */
+export async function pushTrendingToTelegramChannel(bot: Bot<SessionContext>, channelId: string, messages: string[]) {
+    try {
+        await Promise.all(messages.map(async (msg) => {
+            await bot.api.sendMessage(channelId, msg, {
+                parse_mode: "HTML"
+            })
+        }))
+        logger.info({channelId}, "Pushed trending repositories to telegram channel successfully");
+    } catch (error) {
+        logger.error({err: error, channelId}, "Error pushing trending repositories to telegram channel");
+    }
+}
+
+/**
  * Pushes the summary to the channel
  * @param client discord client
  * @param summary summary string
@@ -215,7 +236,7 @@ function formatSummaryToEmbed(summary: string): EmbedBuilder {
  * @returns message string
  */
 function formatSummaryToTelegramMessage(summary: string): string {
-    return `<b>Trending Repositories Summary</b>\n\n${parseMarkdownToHTML(summary)}\n\n<i>Powered by:</i> <a href="https://github.com/yyxff/Trend-Taste">Trend Taste</a>`
+    return `<b>Trending Repositories Summary</b>\n\n${convertMdToHtml(summary)}\n\n${telegramFooter()}`;
 }
 /**
  * Formats the repo list to an embed
@@ -243,6 +264,21 @@ export function formatRepoToEmbed(repo: FineRepoDto): EmbedBuilder {
     embed.setImage(`https://github.html.zone/${repo.owner}/${repo.name}`)
 
     return embed;
+}
+
+/**
+ * Formats the repo list to a message for telegram
+ * @param repo repo information with recommendation
+ * @returns [ message string, image url ]
+ */
+export function formatRepoToTelegramMessage(repo: FineRepoDto): string {
+    const title = `<a href="${repo.url}">${repo.owner}/${repo.name}</a>`;
+    const meta = `⭐ ${repo.stars || 0} | 𐂐 ${repo.forks || 0} | 👀 ${repo.watchings || 0} | </> ${repo.language || 'Unknown'}`;
+    const description = repo.description ? (repo.description.length > 200 ? repo.description.substring(0, 200) + '...' : repo.description) : 'No description';
+    const recommendation = repo.recommendation.substring(0, 1000);
+
+    const message = `${title}\n\n<b>Stat</b>\n${escapeHTML(meta)}\n\n<b>Description</b>\n${escapeHTML(description)}\n\n<b>Recommendation</b>\n${escapeHTML(recommendation)}`
+    return message;
 }
 
 /**

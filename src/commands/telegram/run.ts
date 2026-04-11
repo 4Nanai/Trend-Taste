@@ -3,7 +3,6 @@ import { runTask } from "@/scheduled/runner";
 import { getTaskByChannelId } from "@/services/task.service";
 import { logger } from "@/utils/logger";
 import { Platform } from "@generated/enums";
-import type { ChatFullInfo } from "grammy/types";
 
 export const command = "run";
 export const description = "/run <ChannelID> - Fetches the trending repositories from GitHub";
