@@ -1,35 +1,22 @@
 import type { SessionContext } from "@/bot";
 import { runTask } from "@/scheduled/runner";
-import { getTaskByChannelId } from "@/services/task.service";
 import { logger } from "@/utils/logger";
+import { verifyChannelIdInput } from "@/utils/telegram";
 import { Platform } from "@generated/enums";
 
 export const command = "run";
 export const description = "/run <ChannelID> - Fetches the trending repositories from GitHub";
+export const usage = "/run <ChannelID>\nExample: /run -1001234567890"
 
 export async function execute(ctx: SessionContext) {
-    const text = ctx.message?.text?.trim() ?? "";
-    const parts = text.split(/\s+/);
-    let channelId = parts[1];
-
-    if (!channelId && ctx.session.targetChannel) {
-        channelId = String(ctx.session.targetChannel.id);
-    }
-
-    if (!channelId) {
-        await ctx.reply("Usage: /run <ChannelID>\nExample: /run -1001234567890");
+    const { channelId, task } = await verifyChannelIdInput(ctx)
+    if (!task || !channelId) {
         return;
     }
-
     const cmdLogger = logger.child({ command: `/${command}`, channelId: channelId });
     cmdLogger.info("Command invoked");
     try {
-        const task = await getTaskByChannelId(channelId, Platform.TELEGRAM);
-        if (!task) {
-            cmdLogger.warn("No task configured for this channel");
-            return ctx.reply("No task configured for this channel. Please set up a task first by /set-type.");
-        }
-        runTask(task.id, Platform.TELEGRAM);
+       runTask(task.id, Platform.TELEGRAM);
         cmdLogger.info({ taskType: task.taskType }, "Task started successfully");
         return ctx.reply(`Task ${task.taskType} started. Check the channel for results shortly.`);
     } catch (error) {

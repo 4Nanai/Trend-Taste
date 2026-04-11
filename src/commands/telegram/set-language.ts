@@ -1,13 +1,13 @@
 import { logger } from "@/utils/logger";
 import { Menu } from "@grammyjs/menu";
-import type { ChatFullInfo } from "grammy/types";
 import type { SessionContext } from "@/bot";
 import { setTaskLanguage } from "@/services/task.service";
 import { LanguageType, Platform } from "@generated/enums";
-import { getTaskByChannelId } from "@/repositories/task.repo";
+import { verifyChannelIdInput } from "@/utils/telegram";
 
 export const command = "language";
 export const description = "/language <ChannelID> - Set the bot's reply language for a specific channel"
+export const usage = "/language <ChannelID>\nExample: /language -1001234567890"
 
 export const languageMenu = new Menu<SessionContext>("language-menu")
     .text("English", async (ctx) => {
@@ -35,52 +35,8 @@ export const languageMenu = new Menu<SessionContext>("language-menu")
     });
 
 export async function execute(ctx: SessionContext) {
-    const text = ctx.message?.text?.trim() ?? "";
-    const parts = text.split(/\s+/);
-    let channelId = parts[1];
-    let channel: ChatFullInfo | null = null;
-
-    if (channelId && ctx.session.targetChannel && String(ctx.session.targetChannel.id) !== channelId) {
-        await ctx.reply("A channel is already selected for language setting. Please complete the current language setting process before starting a new one.");
-        return;
-    }
-
-    if (!channelId && ctx.session.targetChannel) {
-        channel = ctx.session.targetChannel;
-        channelId = String(channel.id);
-    }
-
-    if (!channelId) {
-        await ctx.reply("Usage: /language <ChannelID>\nExample: /language -1001234567890");
-        return;
-    }
-
-    try {
-        const task = await getTaskByChannelId(channelId, Platform.TELEGRAM);
-        if (!task) {
-            await ctx.reply("No task configured for this channel. Please set up a task first by /set-type.");
-            logger.warn({ channelId }, "No task configured for this channel when setting language");
-            return;
-        }
-    } catch (error) {
-        await ctx.reply("Error retrieving task configuration for this channel. Please try again later.");
-        logger.error({ err: error, channelId }, "Error retrieving task configuration when setting language");
-        return;
-    }
-
-    try {
-        if (!channel) {
-            channel = await ctx.api.getChat(channelId);
-        }
-    } catch (error) {
-        await ctx.reply("Failed to find this channelId. Please make sure the channelId is correct and that I am a member of that channel/chat.");
-        logger.error({ err: error }, "Error handling telegram set-language command - invalid channelId");
-        return;
-    }
-
+    const { channel } = await verifyChannelIdInput(ctx) 
     if (!channel) {
-        await ctx.reply("Channel not found. Please make sure the channelId is correct and that I am a member of that channel/chat.");
-        logger.error({ channelId }, "Error handling telegram set-language command - channel not found");
         return;
     }
     ctx.session.targetChannel = channel;
