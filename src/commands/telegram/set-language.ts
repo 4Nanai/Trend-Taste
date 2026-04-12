@@ -35,8 +35,9 @@ export const languageMenu = new Menu<SessionContext>("language-menu")
     });
 
 export async function execute(ctx: SessionContext) {
-    const { channel } = await verifyChannelIdInput(ctx) 
-    if (!channel) {
+    const { channel, error } = await verifyChannelIdInput(ctx) 
+    if (!channel || error) {
+        logger.error({err: error}, "Failed to verify channel ID input");
         return;
     }
     ctx.session.targetChannel = channel;

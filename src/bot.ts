@@ -8,6 +8,7 @@ import { handleButton } from "./handlers/button-handler";
 
 import { Bot, Context, session, type SessionFlavor } from "grammy";
 import type { ChatFullInfo } from "grammy/types";
+import type { CommonTimezone } from "./constants/timezones";
 console.debug("Telegram Bot enabled: " + telegramEnabled);
 console.debug("Discord Bot enabled: " + discordEnabled);
 
@@ -71,6 +72,12 @@ if (discordClient) {
 
 export interface SessionData {
   targetChannel: ChatFullInfo | null;
+  cmdLogger?: ReturnType<typeof logger.child>;
+  scheduleConfig?: {
+      timezone?: CommonTimezone;
+      hour?: string;
+      minute?: string;
+  }
 }
 export type SessionContext = Context & SessionFlavor<SessionData>;
 export const telegramBot = telegramEnabled ? new Bot<SessionContext>(String(telegramConfig.TELEGRAM_BOT_TOKEN)) : null;

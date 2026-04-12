@@ -6,6 +6,7 @@ import type { Bot } from "grammy";
 import { languageMenu } from "./commands/telegram/set-language";
 import type { SessionContext } from "./bot";
 import { typeMenu } from "./commands/telegram/set-type";
+import { scheduleMenu, timezoneMenu } from "./commands/telegram/set-schedule";
 
 const commandsData = Object.values(commands).map((command: any) => command.data);
 
@@ -35,6 +36,7 @@ export async function deployCommands({ guildId }: DeployCommandsProps) {
 export async function deployTelegramBotCommands(bot: Bot<SessionContext>) {
     bot.use(languageMenu);
     bot.use(typeMenu);
+    bot.use(scheduleMenu);
 
     for (const [command, handler] of Object.entries(telegramCommandHandlers)) {
         bot.command(command, handler);

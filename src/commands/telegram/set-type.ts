@@ -39,8 +39,9 @@ async function _setGithubTreading(ctx: SessionContext): Promise<Error | null> {
 }
 
 export async function execute(ctx: SessionContext) {
-    const { channel } = await verifyChannelIdInput(ctx, usage);
-    if (!channel) {
+    const { channel, error } = await verifyChannelIdInput(ctx, usage);
+    if (!channel || error) {
+        logger.error({err: error}, "Failed to verify channel ID input");
         return;
     }
     ctx.session.targetChannel = channel;

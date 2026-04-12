@@ -1,3 +1,4 @@
+export type CommonTimezone = (typeof COMMON_TIMEZONES)[number];
 export const COMMON_TIMEZONES = [
   // Asia
   "Asia/Shanghai",
@@ -35,4 +36,4 @@ export const COMMON_TIMEZONES = [
   // Africa
   "Africa/Cairo",
   "Africa/Nairobi",
-];
+] as const;
