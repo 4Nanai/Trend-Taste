@@ -13,6 +13,7 @@ export const languageMenu = new Menu<SessionContext>("language-menu")
     .text("English", async (ctx) => {
         const error = await _setEnglish(ctx);
         ctx.menu.close();
+        ctx.session.cmdLogger = null;
         if (error) {
             await ctx.editMessageText(`Error: ${error.message}`);
         } else {
@@ -25,6 +26,7 @@ export const languageMenu = new Menu<SessionContext>("language-menu")
     .text("简体中文", async (ctx) => {
         const error = await _setSimplifiedChinese(ctx);
         ctx.menu.close();
+        ctx.session.cmdLogger = null;
         if (error) {
             await ctx.editMessageText(`Error: ${error.message}`);
         } else {
@@ -35,13 +37,16 @@ export const languageMenu = new Menu<SessionContext>("language-menu")
     });
 
 export async function execute(ctx: SessionContext) {
-    const { channel, error } = await verifyChannelIdInput(ctx) 
-    if (!channel || error) {
-        logger.error({err: error}, "Failed to verify channel ID input");
+    const { channelId, channel, error } = await verifyChannelIdInput(ctx) 
+    if (error) {
+        logger.error({err: error}, "Failed to verify channel ID input for language command");
         return;
     }
     ctx.session.targetChannel = channel;
-    await ctx.reply(`Please select a language for channel <i>"${channel.title}"</i>:`, {
+    ctx.session.cmdLogger = logger.child({command: command, channelId: channelId})
+    ctx.session.cmdLogger.info("Command invoked");
+
+    await ctx.reply(`Please select a language for channel <i>"${channel!.title}"</i>:`, {
         reply_markup: languageMenu,
         parse_mode: "HTML",
     });
@@ -53,15 +58,13 @@ async function _setEnglish(ctx: SessionContext): Promise<Error | null> {
         logger.error("No target channel found in session when setting language");
         return new Error("No target channel found in session");
     }
-    const cmdLogger = logger.child({command: `/${command}}`, channelId: channel.id})
-    cmdLogger.info("Command invoked");
 
     try {
         await setTaskLanguage(String(channel.id), LanguageType.EN, Platform.TELEGRAM);
-        cmdLogger.info("Command executed successfully");
+        ctx.session.cmdLogger?.info("Command executed successfully");
         return null;
     } catch (error) {
-        cmdLogger.error({err: error}, "Command execution failed");
+        ctx.session.cmdLogger?.error({err: error}, "Command execution failed");
         return new Error(`Failed to set language for channel ${channel.title}. Please try again later.`);
     }
 }
@@ -73,15 +76,13 @@ async function _setSimplifiedChinese(ctx: SessionContext): Promise<Error | null>
         logger.error("No target channel found in session when setting language");
         return new Error("No target channel found in session");
     }
-    const cmdLogger = logger.child({command: `/${command}}`, channelId: channel?.id})
-    cmdLogger.info("Command invoked");
 
     try {
         await setTaskLanguage(String(channel.id), LanguageType.ZH, Platform.TELEGRAM);
-        cmdLogger.info("Command executed successfully");
+        ctx.session.cmdLogger?.info("Command executed successfully");
         return null;
     } catch (error) {
-        cmdLogger.error({err: error}, "Command execution failed");
+        ctx.session.cmdLogger?.error({err: error}, "Command execution failed");
         return new Error(`Failed to set language for channel ${channel.title}. Please try again later.`);
     }
 }

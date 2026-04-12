@@ -14,6 +14,8 @@ import * as tgSetLanguage from "./telegram/set-language";
 import * as tgSetType from "./telegram/set-type";
 import * as tgRun from "./telegram/run";
 import * as tgSetSchedule from "./telegram/set-schedule";
+import * as tgEnable from "./telegram/enable";
+import * as tgDisable from "./telegram/disable";
 
 export const commands = {
     enable,
@@ -59,6 +61,14 @@ export const telegramCommands = [
         command: tgSetSchedule.command,
         description: tgSetSchedule.description,
     },
+    {
+        command: tgEnable.command,
+        description: tgEnable.description,
+    },
+    {
+        command: tgDisable.command,
+        description: tgDisable.description,
+    }
 ];
 
 export const telegramCommandHandlers = {
@@ -70,4 +80,6 @@ export const telegramCommandHandlers = {
     [tgSetType.command]: tgSetType.execute,
     [tgRun.command]: tgRun.execute,
     [tgSetSchedule.command]: tgSetSchedule.execute,
+    [tgEnable.command]: tgEnable.execute,
+    [tgDisable.command]: tgDisable.execute,
 };

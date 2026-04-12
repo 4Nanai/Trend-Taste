@@ -14,11 +14,12 @@ export const typeMenu = new Menu<SessionContext>("type-menu").text("Github Trend
     ctx.menu.close();
     if (error) {
         await ctx.editMessageText(`Error: ${error.message}`);
-    } else {
-        await ctx.editMessageText(`Task type of channel <i>"${ctx.session.targetChannel?.title}"</i> set to Github Trending.`, {
-            parse_mode: "HTML"
-        });
-    }
+        return;
+    } 
+    await ctx.editMessageText(`Task type of channel <i>"${ctx.session.targetChannel?.title}"</i> set to Github Trending.`, {
+        parse_mode: "HTML"
+    });
+    ctx.session.cmdLogger = null;
 })
 
 async function _setGithubTreading(ctx: SessionContext): Promise<Error | null> {
@@ -27,25 +28,26 @@ async function _setGithubTreading(ctx: SessionContext): Promise<Error | null> {
         logger.error("No target channel in session when setting task type");
         return new Error("No target channel in session."); 
     }
-    const cmdLogger = logger.child({command: "set-type", channelId: channel?.id})
-    cmdLogger.info("Setting type command invoked");
     try {
         await setTaskType(String(channel.id), TaskType.GITHUB_TRENDING, Platform.TELEGRAM);
+        ctx.session.cmdLogger?.info("Task type set to Github Trending successfully");
         return null;
     } catch (error) {
-        cmdLogger.error({err: error}, "Error setting task type");
+        ctx.session.cmdLogger?.error({err: error}, "Error setting task type");
         return new Error("Failed to set task type. Please try again later.");
     }
 }
 
 export async function execute(ctx: SessionContext) {
-    const { channel, error } = await verifyChannelIdInput(ctx, usage);
-    if (!channel || error) {
-        logger.error({err: error}, "Failed to verify channel ID input");
+    const { channelId, channel, error } = await verifyChannelIdInput(ctx, usage);
+    if (error) {
+        logger.error({err: error}, "Failed to verify channel ID input for type command");
         return;
     }
     ctx.session.targetChannel = channel;
-    await ctx.reply(`Please select a task type for channel <i>"${channel.title}"</i>`, {
+    ctx.session.cmdLogger = logger.child({command: command, channelId: channelId})
+    ctx.session.cmdLogger.info("Command invoked");
+    await ctx.reply(`Please select a task type for channel <i>"${channel!.title}"</i>`, {
         reply_markup: typeMenu,
         parse_mode: "HTML",
     })

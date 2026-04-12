@@ -1,11 +1,10 @@
-import { telegramBot, type SessionContext } from "@/bot";
-import { COMMON_TIMEZONES, type CommonTimezone } from "@/constants/timezones";
+import { type SessionContext } from "@/bot";
+import { COMMON_TIMEZONES } from "@/constants/timezones";
 import { setTaskSchedule, setTaskTimezone } from "@/services/task.service";
 import { logger } from "@/utils/logger";
 import { verifyChannelIdInput } from "@/utils/telegram";
 import { Platform } from "@generated/enums";
-import { Menu, MenuRange } from "@grammyjs/menu";
-import { InlineKeyboard, Keyboard } from "grammy";
+import { Menu } from "@grammyjs/menu";
 import type { ChatFullInfo } from "grammy/types";
 import { DateTime } from "luxon";
 
@@ -44,7 +43,7 @@ export const scheduleMenu = new Menu<SessionContext>("schedule-menu")
 export async function execute(ctx: SessionContext) { 
     const { channelId, channel, error } = await verifyChannelIdInput(ctx, usage)
     if (error) {
-        logger.error({err: error}, "Failed to verify channel ID input");
+        logger.error({err: error}, "Failed to verify channel ID input for schedule command");
         return;
     }
     
@@ -186,11 +185,14 @@ async function _handleScheduleConfigDone(ctx: SessionContext) {
         + `Your task is scheduled to `
         + `${scheduledTime.getUTCHours().toString().padStart(2, '0')}:${scheduledTime.getUTCMinutes().toString().padStart(2, '0')} `
         + `everyday for ${task.timezone} (UTC${scheduledLuxonTime.toFormat("ZZ")})\n`
-        + `Next run: ${scheduledLuxonTime.toISO()}`;
+        + `Next run: ${scheduledLuxonTime.toLocaleString(DateTime.DATETIME_FULL)}`;
         await ctx.editMessageText(response);
     } catch (error) {
         ctx.session.cmdLogger?.error({err: error, hour, minute, timezone}, "Error setting task schedule");
         await ctx.editMessageText(`Failed to set schedule. Please try again later.`);
+        // Clear the session config
+        ctx.session.scheduleConfig = {};
+        ctx.session.cmdLogger = null;
         return;
     }
 }

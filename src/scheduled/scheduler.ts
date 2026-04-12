@@ -20,7 +20,7 @@ export function addTask(taskId: number, time: string, timezone: string, platform
         async () => {
             try {
                 schedulerLogger.info("Task running");
-                const success = await runTask(taskId)
+                const success = await runTask(taskId, platform);
                 if (!success) {
                     schedulerLogger.error("Task failed");
                     removeTask(taskId);
@@ -59,7 +59,7 @@ export function removeTask(taskId: number) {
  * @param time 
  * @param timezone 
  */
-export function rescheduleTask(taskId: number, time: string, timezone: string) {
+export function rescheduleTask(taskId: number, time: string, timezone: string, platform: Platform = Platform.DISCORD) {
     removeTask(taskId);
-    addTask(taskId, time, timezone);
+    addTask(taskId, time, timezone, platform);
 }

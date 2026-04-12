@@ -162,15 +162,20 @@ export async function pushTrendingToChannel(client: Client, channelId: string, m
  * @param messages message list with image urls
  */
 export async function pushTrendingToTelegramChannel(bot: Bot<SessionContext>, channelId: string, messages: string[]) {
-    try {
-        await Promise.all(messages.map(async (msg) => {
-            await bot.api.sendMessage(channelId, msg, {
-                parse_mode: "HTML"
-            })
-        }))
-        logger.info({channelId}, "Pushed trending repositories to telegram channel successfully");
-    } catch (error) {
-        logger.error({err: error, channelId}, "Error pushing trending repositories to telegram channel");
+    // Send messages sequentially in tg
+    const sleep = (ms: number) => new Promise(resoleve => setTimeout(resoleve, ms));
+    for (const [index, message] of messages.entries()) {
+        try {
+                await bot.api.sendMessage(channelId, message, {
+                    parse_mode: "HTML"
+                }) 
+                if (index < messages.length - 1) {
+                    await sleep(1000);
+            }
+            logger.info({channelId}, "Pushed trending repositories to telegram channel successfully");
+        } catch (error) {
+            logger.error({err: error, channelId}, "Error pushing trending repositories to telegram channel");
+        }
     }
 }
 

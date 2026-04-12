@@ -3,7 +3,7 @@ import { getTasksToInit } from "../services/task.service";
 import { Client } from "discord.js";
 import { deployCommands, deployTelegramBotCommands } from "../deploy-commands";
 import { logger } from "../utils/logger";
-import { session, type Bot, type Context, type SessionFlavor } from "grammy";
+import { session, type Bot } from "grammy";
 import { Platform } from "@generated/enums";
 import { telegramConfig } from "@/config";
 import type { SessionContext, SessionData } from "@/bot";
@@ -42,7 +42,7 @@ export async function initTelegramBot(bot: Bot<SessionContext>) {
 async function initTasks() {
     const enabledTasks = await getTasksToInit();
     enabledTasks.forEach(task => {
-        logger.info({taskId: task.id, schedule: task.schedule, channelId: task.channelId}, "Initializing enabled task");
+        logger.info({taskId: task.id, schedule: task.schedule, channelId: task.channelId, platform: task.platform}, "Initializing enabled task");
         addTask(task.id, `${task.schedule!.getMinutes()} ${task.schedule!.getHours()} * * *`, task.timezone!);
     });
 }
@@ -53,8 +53,8 @@ async function initTasks() {
 async function initTelegramTasks() {
     const enabledTasks = await getTasksToInit(Platform.TELEGRAM);
     enabledTasks.forEach(task => {
-        addTask(task.id, `${task.schedule!.getMinutes()} ${task.schedule!.getHours()} * * *`, task.timezone!, Platform.TELEGRAM);
-        logger.info({taskId: task.id, schedule: task.schedule, channelId: task.channelId}, "Initializing enabled Telegram task");
+        addTask(task.id, `${task.schedule!.getUTCMinutes()} ${task.schedule!.getUTCHours()} * * *`, task.timezone!, Platform.TELEGRAM);
+        logger.info({taskId: task.id, schedule: task.schedule, channelId: task.channelId, platform: task.platform}, "Initializing enabled Telegram task");
     });
 }
 

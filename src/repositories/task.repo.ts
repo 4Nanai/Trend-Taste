@@ -33,7 +33,8 @@ export async function getTasksToInitializeByPlatform(platform: Platform): Promis
             },
             taskType: {
                 not: null,
-            },
+            }, 
+            platform: platform,
         },
     });
     return tasks;

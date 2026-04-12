@@ -6,6 +6,7 @@ import type { SessionContext } from "@/bot";
 
 export const command = "bind";
 export const description = "/bind <ChannelID> - Bind a Telegram channel";
+export const usage = "Usage: /bind <ChannelID>\nExample: /bind -1001234567890";
 
 export async function execute(ctx: SessionContext) {
     const text = ctx.message?.text?.trim() ?? "";
@@ -13,7 +14,7 @@ export async function execute(ctx: SessionContext) {
     const channelId = parts[1];
 
     if (!channelId) {
-        await ctx.reply("Usage: /bind <ChannelID>\nExample: /bind -1001234567890");
+        await ctx.reply(usage);
         return;
     }
 

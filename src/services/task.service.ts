@@ -108,7 +108,12 @@ export async function setTaskSchedule(channelId: string, schedule: Date, platfor
     try {
         const task = await upsertTaskSchedule(channelId, schedule, platform);
         if (task.enabled && task.timezone) {
-            rescheduleTask(task.id, `${schedule.getMinutes()} ${schedule.getHours()} * * *`, task.timezone);
+            if (platform === Platform.DISCORD) {
+                rescheduleTask(task.id, `${schedule.getMinutes()} ${schedule.getHours()} * * *`, task.timezone, platform);
+            }
+            if (platform === Platform.TELEGRAM) {
+                rescheduleTask(task.id, `${schedule.getUTCMinutes()} ${schedule.getUTCHours()} * * *`, task.timezone, platform);
+            }
         }
         return task;
     } catch (error) {
