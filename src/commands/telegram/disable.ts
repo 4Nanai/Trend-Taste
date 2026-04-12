@@ -18,9 +18,13 @@ export async function execute(ctx: SessionContext) {
     try {
         await disableTask(channelId!, Platform.TELEGRAM);
         cmdLogger.info("Command executed successfully");
-        return ctx.reply(`Disabled the scheduled task for channel <i>"${channel?.title}"</i>.`);
+        return ctx.reply(`Disabled the scheduled task for channel <i>"${channel?.title}"</i>.`, {
+            parse_mode: "HTML"
+        });
     } catch (error) {
         cmdLogger.error({err: error}, "Command execution failed");
-        return ctx.reply(`Failed to disable the scheduled task for channel <i>"${channel?.title}"</i>.`);
+        return ctx.reply(`Failed to disable the scheduled task for channel <i>"${channel?.title}"</i>.`, {
+            parse_mode: "HTML"
+        });
     }
 }

@@ -42,7 +42,6 @@ export async function execute(ctx: SessionContext) {
         logger.error({err: error}, "Failed to verify channel ID input for language command");
         return;
     }
-    ctx.session.targetChannel = channel;
     ctx.session.cmdLogger = logger.child({command: command, channelId: channelId})
     ctx.session.cmdLogger.info("Command invoked");
 

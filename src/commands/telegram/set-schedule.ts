@@ -47,8 +47,6 @@ export async function execute(ctx: SessionContext) {
         return;
     }
     
-    // Store the target channel in session for configuration
-    ctx.session.targetChannel = channel;
     ctx.session.cmdLogger = logger.child({command: command, channelId: channelId})
     await _sendScheduleSelection(ctx, channel!);
 }

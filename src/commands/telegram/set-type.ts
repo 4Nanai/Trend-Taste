@@ -44,7 +44,6 @@ export async function execute(ctx: SessionContext) {
         logger.error({err: error}, "Failed to verify channel ID input for type command");
         return;
     }
-    ctx.session.targetChannel = channel;
     ctx.session.cmdLogger = logger.child({command: command, channelId: channelId})
     ctx.session.cmdLogger.info("Command invoked");
     await ctx.reply(`Please select a task type for channel <i>"${channel!.title}"</i>`, {

@@ -55,7 +55,7 @@ export async function verifyChannelIdInput(ctx: SessionContext, usage: string | 
 
     if (!channelId) {
         if (usage) {
-            await ctx.reply(usage);
+            await ctx.reply(`Usage: ${usage}`);
         } else {
             await ctx.reply("Usage: /command <ChannelID>\nExample: /command -1001234567890");
         }
@@ -113,6 +113,8 @@ export async function verifyChannelIdInput(ctx: SessionContext, usage: string | 
         }
     }
 
+    // Store the verified channel in session
+    ctx.session.targetChannel = channel;
     return {
         channelId,
         channel,
