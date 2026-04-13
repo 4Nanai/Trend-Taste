@@ -31,7 +31,13 @@ export async function execute(ctx: SessionContext) {
         logger.error({ channelId }, "Error handling telegram bind command - channel not found");
         return;
     }
-    await createTask(channelId, Platform.TELEGRAM);
+    try {
+        await createTask(channelId, Platform.TELEGRAM);
+    } catch (error) {
+        await ctx.reply("You may have already bound this channel.");
+        logger.error({ err: error, channelId }, "Error creating task for telegram bind command");
+        return;
+    }
     // Store the bound channel in session
     ctx.session.targetChannel = channel;
     await ctx.reply(`Bound bot to channel \"${channel.title ?? channelId}\" successfully.`);
