@@ -19,7 +19,7 @@ export async function execute(ctx: SessionContext) {
         const taskInfo = `<strong>Task Configuration Check List:</strong>\n`
             +`· ${task!.taskType? "✅ " : "❌ "}<strong>[Task Type]</strong>: ${task!.taskType || "Not set"}\n`
             +`· ${task!.language? "✅ " : "❌ "}<strong>[Language]</strong>: ${task!.language || "Not set"}\n`
-            +`· ${task!.schedule? "✅ " : "❌ "}<strong>[Schedule]</strong>: ${task!.schedule ? task!.schedule.getHours().toString().padStart(2, '0') + ":" + task!.schedule.getMinutes().toString().padStart(2, '0') : "Not set"}\n`
+            +`· ${task!.schedule? "✅ " : "❌ "}<strong>[Schedule]</strong>: ${task!.schedule ? task!.schedule.getUTCHours().toString().padStart(2, '0') + ":" + task!.schedule.getUTCMinutes().toString().padStart(2, '0') : "Not set"}\n`
             +`· ${task!.timezone? "✅ " : "❌ "}<strong>[Timezone]</strong>: ${task!.timezone || "Not set"}\n`
             // +`· ${taskReady? "✅ " : "❌ "}<strong>[Ready to enable]</strong>: ${taskReady ? "Yes" : "No"}\n`
             +`· ${task!.enabled? "✅ " : "❌ "}<strong>[Enabled]</strong>: ${task!.enabled ? "Yes" : "No"}\n`
